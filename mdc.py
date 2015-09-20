@@ -38,8 +38,6 @@ def normalize( data, quant ):
         for i in range(0,len(summary)):
             summary.pop()
         
-    for line in data:
-        print (line)
     return data
 
 def simulate( data , SamNum , CentNum , quant ):
@@ -79,7 +77,7 @@ def simulate( data , SamNum , CentNum , quant ):
 
     for j in range(0 , CentNum):
         dist = 0
-        dist = calc_dist(sample[:], CentVector[j][:])
+        dist = calc_dist(sample[2:], CentVector[j][1:])
         if( dist <= least[0]):
             least[0] = dist
             least[1] = j
@@ -87,25 +85,59 @@ def simulate( data , SamNum , CentNum , quant ):
     return ( SamNum, sample[1], least[1] )
 
 def calc_dist( l1 , l2 ):
-    '''Calculates the distance between 2 lists ignoring the first value'''
+    '''Calculates the distance between 2 lists as Vectors
+    list 1 should be the sample list  
+    list 2 should be the Centroid data 
+    WILL NUKE LISTS! pass in sliced versions if you need them later '''
     #print( l1 )
     #print( l2 )
-    l1.pop(1)
+    #l1.pop(1)
     for i in range( len(l2) ):
         l1[i] = float(l1[i]) - float(l2[i])
         l1[i] = pow(l1[i], 2)
-    l1[0] = 0
+    #l1[0] = 0
     ret = math.fsum(l1)
     ret = math.sqrt(ret)
     return ret
 
-def output( outfile, results, header):
+def output( outfile, results, header, outputdata):
     print (header[0][0])
     outfile.write(header[0][0])
-    
-    for i in range(1,len(header[0]) ):
-        print("class", header[0][i][:1], ' (', header[0][i][2:], '):' )
+    outfile.write('\n')
 
+    for i in range(1,len(header[0]) ):
+        print( "class", header[0][i][:1], ' (', header[0][i][2:], '):', results[i-1][0], "samples, ", results[i-1][1], "% accuracy" )
+        outfile.write( "class {} ({}): {} samples, {}  % accuracy\n".format (header[0][i][:1],header[0][i][2:],results[i-1][0],results[i-1][1] ) )
+    
+    print( "overall: " , results[-1][0], "samples", results[-1][1],"% accuracy")
+    outfile.write("overall: {} samples, {}% accuracy\n".format(results[-1][0], results[-1][1] ))
+    
+    
+    for res in outputdata:
+        if(int(res[1]) == int(res[2]) ):
+            outfile.write("{},{},{}\n".format( res[0],res[1],res[2] ) )
+            pass
+        else:
+            outfile.write("{},{},{},*\n".format( res[0],res[1],res[2] ) )
+            pass
+        pass
+
+def parse ( data, classes ):
+    pars = [[0,0] for i in range( classes+1)]
+    
+
+    for i in data:
+        pars[ int(i[1]) ][0] +=1
+        pars[classes][0] += 1
+        if int(i[1]) == int(i[2]):
+            pars[ int(i[1]) ][1] += 1 
+            pars[classes][1] += 1
+    
+    
+    for j in pars:
+        j[1] = 100 * (j[1]/j[0])
+    
+    return pars
 
 def main():
     
@@ -116,21 +148,13 @@ def main():
 
     #Numbers of classes in file
     cent = len(header[0])-1
-    #file = normalize ( file, params )
+    file = normalize ( file, params )
     
+    result = []
 
-    for i in range( 0 , len(file), 1):#len(file) ):
-        result = simulate( file[:], i , cent, params)
-
-        if(int(result[1]) == int(result[2]) ):
-            print( result[0],',',result[1],',',result[2])
-            pass
-        else:
-            print( result[0],',',result[1],',',result[2],',*')
-            pass
-        pass
-    print()
-    output( out, result, header)
+    for i in range( 0 , len(file), 1):
+        result.append( simulate( file[:], i , cent, params))
+    output( out, parse(result, cent) , header , result)
 
 
 if __name__ == "__main__":
