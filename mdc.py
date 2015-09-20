@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, csv
+import sys, csv, math
 
 def init_check():
     '''Opens datafile and creates fileptr to filename.cv '''
@@ -50,20 +50,25 @@ def simulate( data , SamNum , CentNum , quant ):
 
     sample = data.pop(SamNum)
 
+    #creates list for centroid vectors
     CentVector = [[] for i in range(CentNum)]
     
+    #creates space for the centroid vectors
     for i in CentVector:
         for j in range(quant+1):
             i.append(0)
 
     for line in data:
-        #incriment learning vector
+        #increment learning vector quantity
         CentVector[ int(line[1]) ][0] += 1
+        #adds values in learning vector to Centroid
+        #adds the values 
         for i in range(2,quant+2):
             CentVector[ int(line[1]) ][i-1] += float(line[i])
     
-  #  print (CentVector)
-        
+    #print (CentVector)
+
+    #finds the average of the values
     for value in CentVector:
         for i in range(1,quant+1):
             value[i] = value[i]/value[0]
@@ -74,14 +79,25 @@ def simulate( data , SamNum , CentNum , quant ):
 
     for j in range(0 , CentNum):
         dist = 0
-        for i in range(1, quant ):
-    #        print ( sample[i+1], " - " ,CentVector[j][i+1])
-            dist += (sample[i+1]-CentVector[j][i+1])**2
-        if( dist < least[0]):
+        dist = calc_dist(sample[:], CentVector[j][:])
+        if( dist <= least[0]):
             least[0] = dist
             least[1] = j
     
     return ( SamNum, sample[1], least[1] )
+
+def calc_dist( l1 , l2 ):
+    '''Calculates the distance between 2 lists ignoring the first value'''
+    #print( l1 )
+    #print( l2 )
+    l1.pop(1)
+    for i in range( len(l2) ):
+        l1[i] = float(l1[i]) - float(l2[i])
+        l1[i] = pow(l1[i], 2)
+    l1[0] = 0
+    ret = math.fsum(l1)
+    ret = math.sqrt(ret)
+    return ret
 
 def output( outfile, results, header):
     print (header[0][0])
@@ -94,24 +110,28 @@ def output( outfile, results, header):
 def main():
     
     file,header, out  = init_check()
-
+    
+    #number of disparate datapoints each sample has
     params =  len(header[1])-2 
+
+    #Numbers of classes in file
     cent = len(header[0])-1
-    file = normalize ( file, params )
+    #file = normalize ( file, params )
     
 
-    for i in range( 0 , 150, 1):#len(file) ):
+    for i in range( 0 , len(file), 1):#len(file) ):
         result = simulate( file[:], i , cent, params)
 
         if(int(result[1]) == int(result[2]) ):
             print( result[0],',',result[1],',',result[2])
+            pass
         else:
-            print( result[0],',',result[1],',',result[2],'*')
+            print( result[0],',',result[1],',',result[2],',*')
+            pass
         pass
     print()
     output( out, result, header)
 
-    sys.exit()
 
 if __name__ == "__main__":
     main()
