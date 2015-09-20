@@ -35,6 +35,11 @@ def normalize( data, quant ):
         tiny = min(summary)
         for j in data:
             j[i] = (float(j[i])- float(tiny)) / (float(huge) - float(tiny))
+        for i in range(0,len(summary)):
+            summary.pop()
+        
+    for line in data:
+        print (line)
     return data
 
 def simulate( data , SamNum , CentNum , quant ):
@@ -95,7 +100,7 @@ def main():
     file = normalize ( file, params )
     
 
-    for i in range( 0 , 150, 10):#len(file) ):
+    for i in range( 0 , 150, 1):#len(file) ):
         result = simulate( file[:], i , cent, params)
 
         if(int(result[1]) == int(result[2]) ):
